@@ -25,10 +25,11 @@ def send_message(request):
 
     human_message = Message.objects.create(chat=chat, sender_type="human", content=content)
 
+
     # ---- AI PROCESSING HAPPENS HERE (IMPLEMENT LATER) ----
     
     # Placeholder AI response
-    ai_response = "This is a placeholder AI response."
+    ai_response = agent_executor.invoke({"input": content})
 
     # Store the AI response
     ai_message = Message.objects.create(chat=chat, sender_type="ai", content=ai_response)
