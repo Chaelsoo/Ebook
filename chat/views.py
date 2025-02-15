@@ -40,3 +40,29 @@ def send_message(request):
             {"type": "ai", "content": ai_message.content}
         ]
     }, status=status.HTTP_200_OK)
+
+
+from .utils.agent_client import agent_executor
+    
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def chat(request):
+    """Remove a book from a collection."""
+
+    try:
+        query = request.data.get('query')
+
+
+        response = agent_executor.invoke({"input": query})
+        print(f"\nQuery: {query}")
+        print(f"Response: {response}")
+        
+
+        return Response({'message': 'Search results retrieved', 'results': response}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        print(e)
+        return Response({'error': 'Internal Error Happened'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    

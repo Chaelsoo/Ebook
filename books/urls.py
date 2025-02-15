@@ -8,7 +8,6 @@ from .views import (
     get_user_collections,
     get_search_results,
     get_recommendation,
-    chat
 )
 
 urlpatterns = [
@@ -20,5 +19,4 @@ urlpatterns = [
     path('collection/remove-book', remove_book_from_collection, name='collection_remove_book'),
     path('search', get_search_results, name='search'),
     path('recommendation', get_recommendation, name='recommendation'),
-    path('chat', chat, name='chat'),
 ]
