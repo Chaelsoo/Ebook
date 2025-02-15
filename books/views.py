@@ -177,7 +177,7 @@ def get_search_results(request):
         return Response({'error': 'Internal Error Happened'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
-from .utils.agent import create_agent, run_agent_query
+from .utils.agent_client import agent_executor
     
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -188,12 +188,7 @@ def chat(request):
         query = request.data.get('query')
 
 
-        # Create the agent executor
-        agent_executor = create_agent()
-        
-        # Test queries
-
-        response = run_agent_query(agent_executor, query)
+        response = agent_executor.invoke({"input": query})
         print(f"\nQuery: {query}")
         print(f"Response: {response}")
         
