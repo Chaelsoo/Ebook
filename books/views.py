@@ -168,7 +168,7 @@ def get_search_results(request):
 
         print(f"Most common genre: {get_most_common_genre(user_data)}")
         print(f"Final search query: {query} {get_most_common_genre(user_data)}")
-        recommendation_results = retrieve_semantic_recommendations(books, query, user_data, 5).to_dict(orient="records")
+        recommendation_results = retrieve_semantic_recommendations(books, query, user_data, enhanced_query, 5).to_dict(orient="records")
         
         print(f'recommendation_results = {recommendation_results}')
         return Response({'message': 'Search results retrieved', 'results': recommendation_results}, status=status.HTTP_200_OK)

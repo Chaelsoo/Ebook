@@ -12,7 +12,7 @@ import random
 load_dotenv()
 
 # Load books data
-books = pd.read_csv("dummy_data/books_with_emotions.csv")
+books = pd.read_csv("/home/fodhil/hackathons/mobai/Ebook/books/dummy_data/books_with_emotions.csv")
 
 # books["tagged_description"].to_csv("tagged_description.txt",
 #                                    sep = "\n",
@@ -42,7 +42,7 @@ books_db = Chroma(
     embedding_function=embeddings
 )
 
-def retrieve_semantic_recommendations(books, query, user_data, top_k=5):
+def retrieve_semantic_recommendations(books, query, user_data, enhanced_query, top_k=5):
     most_common_genre = get_most_common_genre(user_data)
     if most_common_genre:
         combined_query = f"{query} {enhanced_query}"
@@ -157,11 +157,11 @@ def enhance_query(query, user_data, genre_keywords):
 # recommendation_results = retrieve_semantic_recommendations(books, query, user_data, 5)
 # print(f'recommendation_results = {recommendation_results.to_dict(orient="records")}')
 
-for_you = retrieve_foryou_recommendations(books, user_data).to_dict(orient="records")
-print("Home Recommendations:")
-print(for_you)
-for book in for_you:
-    print(f"Title: {book.title}, Categories: {book.categories}")
+# for_you = retrieve_foryou_recommendations(books, user_data).to_dict(orient="records")
+# print("Home Recommendations:")
+# print(for_you)
+# for book in for_you:
+#     print(f"Title: {book.title}, Categories: {book.categories}")
 
 
 
