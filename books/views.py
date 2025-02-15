@@ -132,3 +132,74 @@ def remove_book_from_collection(request):
         return Response({'error': 'Collection not found'}, status=status.HTTP_404_NOT_FOUND)
     except Book.DoesNotExist:
         return Response({'error': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+    
+    
+############
+# AI POWERED SEARCH
+from .utils.vector_search import retrieve_semantic_recommendations, get_most_common_genre, enhance_query, genre_keywords, user_data, books, retrieve_foryou_recommendations
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_recommendation(request):
+    """Remove a book from a collection."""
+
+    try:
+        for_you = retrieve_foryou_recommendations(books, user_data).to_dict(orient="records")
+        return Response({'message': 'For you page books retrieved', 'results': for_you}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': 'Internal Error Happened'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def get_search_results(request):
+    """Remove a book from a collection."""
+
+    try:
+        query = request.data.get('query')
+
+        enhanced_query = enhance_query(query, user_data, genre_keywords)
+
+        print(f"Enhanced Query: {enhanced_query}")
+
+
+
+        print(f"Most common genre: {get_most_common_genre(user_data)}")
+        print(f"Final search query: {query} {get_most_common_genre(user_data)}")
+        recommendation_results = retrieve_semantic_recommendations(books, query, user_data, 5).to_dict(orient="records")
+        
+        print(f'recommendation_results = {recommendation_results}')
+        return Response({'message': 'Search results retrieved', 'results': recommendation_results}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': 'Internal Error Happened'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
+from .utils.agent import create_agent, run_agent_query
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def chat(request):
+    """Remove a book from a collection."""
+
+    try:
+        query = request.data.get('query')
+
+
+        # Create the agent executor
+        agent_executor = create_agent()
+        
+        # Test queries
+
+        response = run_agent_query(agent_executor, query)
+        print(f"\nQuery: {query}")
+        print(f"Response: {response}")
+        
+
+        return Response({'message': 'Search results retrieved', 'results': response}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'error': 'Internal Error Happened'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
