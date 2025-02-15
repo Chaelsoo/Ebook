@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from .models import Review,SearchHistory
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,3 +22,15 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise serializers.ValidationError("Invalid credentials")
         return user
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')  # Display username instead of user ID
+
+    class Meta:
+        model = Review
+        fields = ['id', 'user', 'book', 'rating', 'comment', 'created_at']
+
+class SearchHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchHistory
+        fields = ['id', 'query', 'created_at']
