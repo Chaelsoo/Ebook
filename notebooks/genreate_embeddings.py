@@ -1,4 +1,35 @@
-import json
+"""
+
+This code implements a book recommendation system using semantic search with LangChain, ChromaDB, and Jina Embeddings. Here's an overview of its key components:
+
+1. Data Processing:
+Loads book data from books_with_emotions.csv and extracts tagged_description into a separate text file.
+Uses TextLoader to load the descriptions and CharacterTextSplitter to split them into smaller text chunks.
+
+2. Vector Embeddings & Database Setup:
+Uses Jina Embeddings to generate vector representations of the book descriptions.
+Stores and retrieves embeddings using ChromaDB, a persistent vector database.
+
+3. User Data Analysis:
+Extracts the most common genre from the user's:
+Favorite books
+Reading history
+Search queries
+Enhances search queries with genre-related keywords to improve recommendation relevance.
+
+4. Recommendation System:
+Semantic Recommendations: Retrieves top books matching a user's query using similarity search.
+For-You Recommendations: Generates personalized book suggestions based on past interactions and enhanced queries.
+Best Rating Selection: Finds the highest-rated book from the recommended list.
+
+5. Execution & Output:
+Enhances the user’s input query and finds relevant books.
+Prints recommended books along with their title, genre, author, and rating.
+Saves user data embeddings and confirms successful recommendation generation.
+This system personalizes book suggestions by analyzing user preferences and improving search queries with keyword expansion, making it a smart recommendation engine. It leverages semantic search to find books similar to the user's interests and enhances the search process with genre-specific keywords for better results.
+
+"""
+
 from langchain_community.embeddings import JinaEmbeddings
 from langchain_core.documents import Document
 import os
@@ -12,25 +43,25 @@ import random
 load_dotenv()
 
 # Load books data
-books = pd.read_csv("/home/fodhil/hackathons/mobai/Ebook/books/dummy_data/books_with_emotions.csv")
+books = pd.read_csv("books_with_emotions.csv")
 
-# books["tagged_description"].to_csv("tagged_description.txt",
-#                                    sep = "\n",
-#                                    index = False,
-#                                    header = False)
+books["tagged_description"].to_csv("tagged_description.txt",
+                                   sep = "\n",
+                                   index = False,
+                                   header = False)
 
-# from langchain_community.document_loaders import TextLoader
-# from langchain_text_splitters import CharacterTextSplitter
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import CharacterTextSplitter
 
-# raw_documents = TextLoader("tagged_description.txt").load()
+raw_documents = TextLoader("tagged_description.txt").load()
 
-# # Change size and overlap
-# text_splitter = CharacterTextSplitter(chunk_size=0, chunk_overlap=0, separator="\n")
-# documents = text_splitter.split_documents(raw_documents)
+# Change size and overlap
+text_splitter = CharacterTextSplitter(chunk_size=0, chunk_overlap=0, separator="\n")
+documents = text_splitter.split_documents(raw_documents)
 
 # Create embeddings
 current_dir = os.getcwd()
-persistent_directory = "/home/fodhil/hackathons/mobai/Ebook/books/db/chroma_db"
+persistent_directory = os.path.join(current_dir, "db", "chroma_db")
 
 embeddings = JinaEmbeddings(
     jina_api_key=os.getenv("JINA_API_KEY", "jina_*"), model_name="jina-embeddings-v2-base-en"
@@ -42,23 +73,18 @@ books_db = Chroma(
     embedding_function=embeddings
 )
 
-# print()
-
-def retrieve_semantic_recommendations(books, query, user_data, enhanced_query, top_k=5):
+def retrieve_semantic_recommendations(query, user_data, top_k=5):
     most_common_genre = get_most_common_genre(user_data)
     if most_common_genre:
-        combined_query = f"{enhanced_query}"
+        combined_query = f"{query} {enhanced_query}"
     else:
         combined_query = query
-    print(combined_query)
     search_results = books_db.similarity_search(combined_query, k=top_k)
-    print(search_results)
     books_list = [int(result.metadata['isbn13']) for result in search_results]
-    
     return books[books["isbn13"].isin(books_list)]
 
 # THIS IS TO GET HOME RECCOMENDATION 
-def retrieve_foryou_recommendations(books, user_data):
+def retrieve_foryou_recommendations(user_data):
     dummy_query=""
     enhanced=enhance_query(dummy_query,user_data,genre_keywords)
     print(f"query used in reccomendation :{enhanced}")
@@ -149,34 +175,33 @@ def enhance_query(query, user_data, genre_keywords):
 
     return enhanced_query
 
-# query = "I want an exciting book."
-# enhanced_query = enhance_query(query, user_data, genre_keywords)
+query = "I want an exciting book."
+enhanced_query = enhance_query(query, user_data, genre_keywords)
 
-# print(f"Enhanced Query: {enhanced_query}")
-
-
-# print(f"Most common genre: {get_most_common_genre(user_data)}")
-# print(f"Final search query: {query} {get_most_common_genre(user_data)}")
-# recommendation_results = retrieve_semantic_recommendations(books, query, user_data, enhanced_query, 5)
-# print(f'recommendation_results = {recommendation_results.to_dict(orient="records")}')
-
-# for_you = retrieve_foryou_recommendations(books, user_data).to_dict(orient="records")
-# print("Home Recommendations:")
-# print(for_you)
-# for book in for_you:
-#     print(f"Title: {book.title}, Categories: {book.categories}")
+print(f"Enhanced Query: {enhanced_query}")
 
 
 
+print(f"Most common genre: {get_most_common_genre(user_data)}")
+print(f"Final search query: {query} {get_most_common_genre(user_data)}")
+recommendation_results = retrieve_semantic_recommendations(query, user_data, 5)
+print(f'recommendation_results = {recommendation_results}')
+for_you = retrieve_foryou_recommendations(user_data)
+print("Home Recommendations:")
+for book in for_you.itertuples(index=False):
+    print(f"Title: {book.title}, Categories: {book.categories}")
 
-# i = 1
-# for row in recommendation_results.itertuples(index=False):
-#     print(f"{i}: Title: {row.title},Genre:{row.categories} Author: {row.authors}, Average Rating: {row.average_rating}")
-#     print("-" * 50)
-#     i += 1
 
-# best_result = get_highest_rating(recommendation_results)
-# print(best_result)
-# print(best_result.title)
 
-# print("User data embeddings saved and recommendations generated successfully!")
+
+i = 1
+for row in recommendation_results.itertuples(index=False):
+    print(f"{i}: Title: {row.title},Genre:{row.categories} Author: {row.authors}, Average Rating: {row.average_rating}")
+    print("-" * 50)
+    i += 1
+
+best_result = get_highest_rating(recommendation_results)
+print(best_result)
+print(best_result.title)
+
+print("User data embeddings saved and recommendations generated successfully!")

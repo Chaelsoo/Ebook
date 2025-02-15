@@ -146,7 +146,7 @@ def get_recommendation(request):
     """Remove a book from a collection."""
 
     try:
-        for_you = retrieve_foryou_recommendations(books, user_data).to_dict(orient="records")
+        for_you = retrieve_foryou_recommendations(books, user_data).fillna(value=0).to_dict(orient="records")
         return Response({'message': 'For you page books retrieved', 'results': for_you}, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -168,12 +168,16 @@ def get_search_results(request):
 
         print(f"Most common genre: {get_most_common_genre(user_data)}")
         print(f"Final search query: {query} {get_most_common_genre(user_data)}")
-        recommendation_results = retrieve_semantic_recommendations(books, query, user_data, enhanced_query, 5).to_dict(orient="records")
+
+        recommendation_results = retrieve_semantic_recommendations(
+            books, query, user_data, enhanced_query, 5
+        ).fillna(value=0).to_dict(orient="records")
         
         print(f'recommendation_results = {recommendation_results}')
         return Response({'message': 'Search results retrieved', 'results': recommendation_results}, status=status.HTTP_200_OK)
 
     except Exception as e:
+        print(e)
         return Response({'error': 'Internal Error Happened'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
@@ -196,5 +200,6 @@ def chat(request):
         return Response({'message': 'Search results retrieved', 'results': response}, status=status.HTTP_200_OK)
 
     except Exception as e:
+        print(e)
         return Response({'error': 'Internal Error Happened'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
